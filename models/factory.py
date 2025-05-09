@@ -2,7 +2,6 @@
 
 import gymnasium as gym
 from models.actor_critic import Agent, ActionSpaceType, ObservationSpaceType
-from typing import Union
 
 
 def create_actor_critic(observation_space: gym.Space, action_space: gym.Space) -> Agent:
@@ -12,7 +11,7 @@ def create_actor_critic(observation_space: gym.Space, action_space: gym.Space) -
     Args:
         observation_space: Gym observation space
         action_space: Gym action space
-    
+
     Returns:
         Appropriate actor-critic network with the correct configuration
     """
