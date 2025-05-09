@@ -25,7 +25,7 @@
   - [x] integrate PPO metrics
   - [x] integrate the debugging metrics and figure out their uses
 
-- [x] compare and benchmark to reference implementation
+- [x] compare and benchmark to reference implementation
 
 - [ ] clean the repo 
   - [x] clean logs
@@ -34,7 +34,7 @@
   - [x] do not hardcocde parameters
   - [x] allow video registering -> W&B non support sync ad ora ma stica
   - [x] fix determinism with seeds
-  - [ ] reorganize folder structure
+  - [x] reorganize folder structure
   - [ ] rewrite the buffer to make it more efficient
 
 - [ ] make PPO command line parametric to distinct strategies:
@@ -42,7 +42,7 @@
     - [ ] normalization of advantage
     - [ ] annealed lr
 
-- [ ] make the PPO parametric on input and output types: continous or discrete
+- [x] make the PPO parametric on input and output types: continous or discrete
 
 - [ ] add support for GPU experiments
 

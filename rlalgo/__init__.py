@@ -1,5 +1,5 @@
-from .PPO import PPO
-# from .REINFORCE import REINFORCE
-# from .VanillaPolicyGradient import VanillaPolicyGradient
+"""Reinforcement Learning Algorithms."""
 
-__all__ = ['PPO']
+from rlalgo.ppo import PPO  # Re-export PPO
+
+__all__ = ["PPO"]

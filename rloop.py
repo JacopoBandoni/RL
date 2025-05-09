@@ -18,20 +18,20 @@ def parse_args():
 
     # fmt: off
     # Environment parameters
-    parser.add_argument("--gym-id", type=str, default="CartPole-v1", help="Gym environment ID")
+    parser.add_argument("--gym-id", type=str, default="Swimmer-v5", help="Gym environment ID")
     parser.add_argument("--num-envs", type=int, default=4, help="Number of parallel environments")
-    parser.add_argument("--num-updates", type=int, default=300, help="Number of update iterations") # 1953 per 1M
-    parser.add_argument("--num-steps", type=int, default=128, help="Number of steps per update")
+    parser.add_argument("--num-updates", type=int, default=122, help="Number of update iterations") # 1953 per 1M
+    parser.add_argument("--num-steps", type=int, default=2048, help="Number of steps per update")
     parser.add_argument("--seeds", nargs="+", type=int, default=[10], help="Random seeds to use")
     # capture video sync with wandb is bugged with current version of wandb
     parser.add_argument("--capture-video", action="store_true", default=False, help="Capture videos of agent performance")
     # PPO hyperparameters
-    parser.add_argument("--learning-rate", type=float, default=2.5e-4, help="Learning rate")
+    parser.add_argument("--learning-rate", type=float, default=3e-4, help="Learning rate")
     parser.add_argument("--gamma", type=float, default=0.99, help="Discount factor")
     parser.add_argument("--gae-lambda", type=float, default=1.0, help="GAE lambda parameter")
-    parser.add_argument("--eps", type=float, default=0.3, help="PPO clipping parameter")
-    parser.add_argument("--epochs", type=int, default=4, help="Number of epochs for policy update")
-    parser.add_argument("--batch-size", type=int, default=128, help="Batch size for policy update")
+    parser.add_argument("--eps", type=float, default=0.2, help="PPO clipping parameter")
+    parser.add_argument("--epochs", type=int, default=10, help="Number of epochs for policy update")
+    parser.add_argument("--batch-size", type=int, default=64, help="Batch size for policy update")
     parser.add_argument("--value-clipping", action="store_true", default=False, help="Use value function clipping")
     parser.add_argument("--value-loss-coef", type=float, default=0.5, help="Coefficient for value loss")
     parser.add_argument("--policy-loss-coef", type=float, default=1.0, help="Coefficient for policy loss")
@@ -114,8 +114,8 @@ def train_single_seed(args, seed):
 
     # Initialize PPO agent
     agent = PPO(
-        obs_space_dims=envs.single_observation_space.shape[0],
-        action_space_dims=envs.single_action_space.n,
+        observation_space=envs.single_observation_space,
+        action_space=envs.single_action_space,
         num_environments=args.num_envs,
         learning_rate=args.learning_rate,
         gamma=args.gamma,
