@@ -10,7 +10,7 @@ import torch.nn as nn
 
 class PPObuffer:
 
-    def __init__(self, batch_size: int, gamma: float) -> None:
+    def __init__(self, batch_size: int, gamma: float, gae_lambda: float = None) -> None:
         self.data: Dict[str, List] = {
             "states": [],
             "actions": [],
@@ -23,6 +23,7 @@ class PPObuffer:
         }
         self.batch_size = batch_size
         self.gamma = gamma
+        self.gae_lambda = gae_lambda
 
     def add_step(
         self,
@@ -48,9 +49,7 @@ class PPObuffer:
     def __len__(self) -> int:
         return len(self.data["states"])
 
-    def compute_returns_and_advantages(
-        self, gamma: float, gae_lambda: float = None
-    ) -> None:
+    def compute_returns_and_advantages(self) -> None:
         """Compute returns and advantages using GAE."""
 
         steps_number = len(self.data["states"])
@@ -58,6 +57,7 @@ class PPObuffer:
 
         self.data["returns"] = [0] * steps_number
 
+        # compute cumulative discounted returns
         for i in range(steps_number):
             if (
                 self.data["truncated"][i]
@@ -74,10 +74,47 @@ class PPObuffer:
                         )
                 new_episode_idx = i + 1
 
-        self.data["advantages"] = [
-            self.data["returns"][i] - self.data["value_preds"][i]
-            for i in range(steps_number)
-        ]
+        # compute advantages
+
+        if not self.gae_lambda:
+            # compute advantages using TD error
+            self.data["advantages"] = [
+                self.data["returns"][i] - self.data["value_preds"][i]
+                for i in range(steps_number)
+            ]
+        else:
+            # compute advantages using GAE
+            deltas = [0] * steps_number
+            self.data["advantages"] = [0] * steps_number
+
+            # compute deltas 
+            for i in range(steps_number):
+                if (
+                    i == steps_number - 1
+                    or self.data["terminated"][i]
+                    or self.data["truncated"][i]
+                ):
+                    deltas[i] = self.data["rewards"][i] - self.data["value_preds"][i]
+                else:        
+                    deltas[i] = (
+                        self.data["rewards"][i]
+                        + self.gamma * self.data["value_preds"][i + 1]
+                        - self.data["value_preds"][i]
+                    )
+
+            # compute advantages
+            for i in reversed(range(steps_number)):
+                if (
+                    i == steps_number - 1
+                    or self.data["terminated"][i]
+                    or self.data["truncated"][i]
+                ):
+                    self.data["advantages"][i] = deltas[i]
+                else:
+                    self.data["advantages"][i] = (
+                        deltas[i]
+                        + self.gamma * self.gae_lambda * self.data["advantages"][i + 1]
+                    )
 
     def __iter__(self) -> Iterator[Dict[str, torch.Tensor]]:
         """Creates an iterator that yields batches."""
@@ -92,8 +129,6 @@ class PPObuffer:
                 for key in self.data
             }
             yield batch
-
-        # self.delete_data()
 
     def delete_data(self) -> None:
         self.data = {
@@ -111,11 +146,14 @@ class PPObuffer:
 
 class MultiEnvPPOBuffer:
 
-    def __init__(self, num_env: int, batch_size: int, gamma: float) -> None:
+    def __init__(
+        self, num_env: int, batch_size: int, gamma: float, gae_lambda: float
+    ) -> None:
         self.num_env = num_env
         self.batch_size = batch_size
-        self.gamma = gamma
-        self.ppo_buffers = [PPObuffer(batch_size, gamma) for _ in range(num_env)]
+        self.ppo_buffers = [
+            PPObuffer(batch_size, gamma, gae_lambda) for _ in range(num_env)
+        ]
 
     def add_steps(
         self,
@@ -146,7 +184,7 @@ class MultiEnvPPOBuffer:
     def compute_returns(self, gae=False):
         """Compute cumulative discounted returns"""
         for buffer in self.ppo_buffers:
-            buffer.compute_returns_and_advantages(gamma=self.gamma)
+            buffer.compute_returns_and_advantages()
 
     def __iter__(self) -> Iterator[Dict[str, torch.Tensor]]:
         """Creates an iterator that yields batches combining data from all environments."""

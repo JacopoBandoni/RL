@@ -27,7 +27,7 @@
 
 - [x] compare and benchmark to reference implementation
 
-- [ ] clean the repo 
+- [x] clean the repo 
   - [x] clean logs
   - [x] clean redundant code (tracking twice)
   - [x] models
@@ -35,17 +35,20 @@
   - [x] allow video registering -> W&B non support sync ad ora ma stica
   - [x] fix determinism with seeds
   - [x] reorganize folder structure
-  - [ ] rewrite the buffer to make it more efficient
-
-- [ ] make PPO command line parametric to distinct strategies:
-    - [ ] GAE
-    - [ ] normalization of advantage
-    - [ ] annealed lr
+  - [x] rewrite the buffer to make it more efficient
 
 - [x] make the PPO parametric on input and output types: continous or discrete
 
-- [ ] add support for GPU experiments
+- [x] fix bug when 1 num_envs
 
-- [ ] find a way to test across distinct environment and distinct strategies
+- [ ] make PPO command line parametric to distinct strategies:
+    - [x] GAE
+    - [ ] normalization of advantage
+    - [ ] annealed lr
+
+- [ ] Make PPO on Humanoid-v5 as good as clean RL
+      https://huggingface.co/cleanrl/Humanoid-v2-ppo_continuous_action-seed1
+
+- [ ] add support for GPU experiments
 
 MOVE to DREAMER v3

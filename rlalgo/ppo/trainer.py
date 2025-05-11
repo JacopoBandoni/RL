@@ -9,6 +9,7 @@ import torch.nn as nn
 from models.factory import create_actor_critic
 from rlalgo.ppo.buffer import MultiEnvPPOBuffer
 
+
 class PPO:
 
     def __init__(
@@ -32,13 +33,15 @@ class PPO:
     ) -> None:
         self.learning_rate = learning_rate
         self.gamma = gamma
-        self.gae_lambda = gae_lambda
         self.eps = eps
         self.epoches = epochs
         self.value_clipping = value_clipping
         self.num_envs = num_environments
         self.ppo_buffer = MultiEnvPPOBuffer(
-            num_env=num_environments, batch_size=batch_size, gamma=self.gamma
+            num_env=num_environments,
+            batch_size=batch_size,
+            gamma=gamma,
+            gae_lambda=gae_lambda,
         )
         # Create model using the factory
         self.model = create_actor_critic(observation_space, action_space)
@@ -51,7 +54,7 @@ class PPO:
         self.policy_loss_coef = policy_loss_coef
         self.entropy_coef = entropy_coef
         self.max_grad_norm = max_grad_norm
-        
+
         # Store spaces for reference
         self.observation_space = observation_space
         self.action_space = action_space

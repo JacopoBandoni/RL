@@ -3,3 +3,4 @@ runs/
 wandb/
 videos/
 saved_video/
+__pycache__
