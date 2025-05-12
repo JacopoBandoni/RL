@@ -40,9 +40,14 @@ def parse_args():
     parser.add_argument("--entropy-coef", type=float, default=0, help="Coefficient for entropy loss")
     parser.add_argument("--max-grad-norm", type=float, default=0.5, help="Max norm for gradient clipping")
     parser.add_argument("--adam-eps", type=float, default=1e-5, help="Epsilon value for Adam optimizer")
+    parser.add_argument("--advantage-normalization", action="store_true", default=True, help="Normalize advantage")
+    parser.add_argument("--annealed-lr", action="store_true", default=False, help="Use annealed learning rate")
+    # GPU support
+    parser.add_argument("--device", type=str, default="cuda" if torch.cuda.is_available() else "cpu", 
+                        help="Device to use for training (cuda or cpu)")
     # Logging parameters
     parser.add_argument("--use-wandb", action="store_true", default=True, help="Use Weights & Biases for logging")
-    parser.add_argument("--wandb-project", type=str, default="PPO", help="W&B project name")
+    parser.add_argument("--wandb-project", type=str, default=f"PPO", help="W&B project name")
     parser.add_argument("--wandb-entity", type=str, default=None, help="W&B entity (team) name")
     # fmt: on
 
@@ -59,7 +64,7 @@ def make_env(gym_id, seed, idx, capture_video, run_name, capture_episodes=0):
         idx: Index of the environment in the vectorized env
         capture_video: Whether to capture video
         run_name: Name of the current run (for video directory)
-        capture_episodes: Episode recording frequency (0 = all, N = record one every N episodes)
+        capture_episodes: Episode recording frequency (0 = all, N = record one episode every N episodes)
     """
 
     def thunk():
@@ -84,7 +89,20 @@ def make_env(gym_id, seed, idx, capture_video, run_name, capture_episodes=0):
             else:
                 # Record all episodes (default behavior)
                 env = gym.wrappers.RecordVideo(env, f"videos/{run_name}")
+        
         env = gym.wrappers.RecordEpisodeStatistics(env)
+        if isinstance(env.action_space, gym.spaces.Box):
+            env = gym.wrappers.ClipAction(env)
+            env = gym.wrappers.NormalizeObservation(env)
+            # Clipping observation
+            # env = gym.wrappers.TransformObservation(
+            #     env, lambda obs: np.clip(obs, -10, 10)
+            # )
+            env = gym.wrappers.NormalizeReward(env)
+            # Clipping reward
+            # env = gym.wrappers.TransformReward(
+            #     env, lambda reward: np.clip(reward, -10, 10)
+            # )
         env.action_space.seed(seed)
         env.observation_space.seed(seed)
         return env
@@ -101,7 +119,7 @@ def setup_logging(args, seed, current_run_name):
     # Initialize W&B if enabled
     if args.use_wandb:
         wandb.init(
-            project=args.wandb_project,
+            project=args.wandb_project+"_"+args.gym_id,
             entity=args.wandb_entity,
             sync_tensorboard=True,
             config=hyperparams,
@@ -168,6 +186,9 @@ def train_single_seed(args, seed):
         entropy_coef=args.entropy_coef,
         max_grad_norm=args.max_grad_norm,
         adam_eps=args.adam_eps,
+        advantage_normalization=args.advantage_normalization,
+        annealed_lr=args.annealed_lr,
+        device=args.device,
     )
 
     # Track metrics

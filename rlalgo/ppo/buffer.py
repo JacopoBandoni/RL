@@ -10,7 +10,9 @@ import torch.nn as nn
 
 class PPObuffer:
 
-    def __init__(self, batch_size: int, gamma: float, gae_lambda: float = None) -> None:
+    def __init__(
+        self, batch_size: int, gamma: float, gae_lambda: float = None, device="cpu"
+    ) -> None:
         self.data: Dict[str, List] = {
             "states": [],
             "actions": [],
@@ -24,6 +26,7 @@ class PPObuffer:
         self.batch_size = batch_size
         self.gamma = gamma
         self.gae_lambda = gae_lambda
+        self.device = device
 
     def add_step(
         self,
@@ -84,10 +87,10 @@ class PPObuffer:
             ]
         else:
             # compute advantages using GAE
-            deltas = [0] * steps_number
-            self.data["advantages"] = [0] * steps_number
+            deltas = torch.zeros(steps_number, device=self.device)
+            self.data["advantages"] = torch.zeros(steps_number, device=self.device)
 
-            # compute deltas 
+            # compute deltas
             for i in range(steps_number):
                 if (
                     i == steps_number - 1
@@ -95,7 +98,7 @@ class PPObuffer:
                     or self.data["truncated"][i]
                 ):
                     deltas[i] = self.data["rewards"][i] - self.data["value_preds"][i]
-                else:        
+                else:
                     deltas[i] = (
                         self.data["rewards"][i]
                         + self.gamma * self.data["value_preds"][i + 1]
@@ -147,12 +150,18 @@ class PPObuffer:
 class MultiEnvPPOBuffer:
 
     def __init__(
-        self, num_env: int, batch_size: int, gamma: float, gae_lambda: float
+        self,
+        num_env: int,
+        batch_size: int,
+        gamma: float,
+        gae_lambda: float,
+        device="cpu",
     ) -> None:
         self.num_env = num_env
         self.batch_size = batch_size
+        self.device = device
         self.ppo_buffers = [
-            PPObuffer(batch_size, gamma, gae_lambda) for _ in range(num_env)
+            PPObuffer(batch_size, gamma, gae_lambda, device) for _ in range(num_env)
         ]
 
     def add_steps(

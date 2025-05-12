@@ -33,10 +33,12 @@ class Agent(nn.Module):
         action_space_type=ActionSpaceType.DISCRETE,
         obs_space_type=ObservationSpaceType.BOX,
         embedding_dim=64,  # For discrete observations
+        device="cpu"
     ):
         super(Agent, self).__init__()
         self.action_space_type = action_space_type
         self.obs_space_type = obs_space_type
+        self.device = device
 
         # Input processing based on observation space type
         if obs_space_type == ObservationSpaceType.DISCRETE:
@@ -86,6 +88,9 @@ class Agent(nn.Module):
             )
             self.actor_mean = layer_init(nn.Linear(64, out_features), std=0.01)
             self.actor_logstd = nn.Parameter(torch.zeros(1, out_features))
+        
+        # Move everything to the specified device
+        self.to(device)
 
     def _process_obs(self, x):
         """Process observation based on space type."""

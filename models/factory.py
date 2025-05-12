@@ -4,13 +4,14 @@ import gymnasium as gym
 from models.actor_critic import Agent, ActionSpaceType, ObservationSpaceType
 
 
-def create_actor_critic(observation_space: gym.Space, action_space: gym.Space) -> Agent:
+def create_actor_critic(observation_space: gym.Space, action_space: gym.Space, device="cpu") -> Agent:
     """
     Create appropriate actor-critic model based on observation and action spaces.
 
     Args:
         observation_space: Gym observation space
         action_space: Gym action space
+        device: Device to place the model on (cpu or cuda)
 
     Returns:
         Appropriate actor-critic network with the correct configuration
@@ -41,4 +42,5 @@ def create_actor_critic(observation_space: gym.Space, action_space: gym.Space) -
         out_features=act_dim,
         action_space_type=action_type,
         obs_space_type=obs_type,
+        device=device,
     )

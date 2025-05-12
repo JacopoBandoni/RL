@@ -41,13 +41,13 @@
 
 - [x] fix bug when 1 num_envs
 
-- [ ] make PPO command line parametric to distinct strategies:
+- [x] make PPO command line parametric to distinct strategies:
     - [x] GAE
-    - [ ] normalization of advantage
-    - [ ] annealed lr
+    - [x] normalization of advantage
+    - [x] annealed lr
 
-- [ ] Make PPO on Humanoid-v5 as good as clean RL
-      https://huggingface.co/cleanrl/Humanoid-v2-ppo_continuous_action-seed1
+- [x] Understand and implement the details of the cleanrl implementation of PPO (for continous tasks)
+      https://docs.cleanrl.dev/rl-algorithms/ppo/#explanation-of-the-logged-metrics_2 
 
 - [ ] add support for GPU experiments
 

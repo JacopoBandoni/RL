@@ -30,6 +30,9 @@ class PPO:
         entropy_coef: float,
         max_grad_norm: float,
         adam_eps: float,
+        advantage_normalization: bool,
+        annealed_lr: bool,
+        device: str,
     ) -> None:
         self.learning_rate = learning_rate
         self.gamma = gamma
@@ -42,9 +45,10 @@ class PPO:
             batch_size=batch_size,
             gamma=gamma,
             gae_lambda=gae_lambda,
+            device=device,
         )
         # Create model using the factory
-        self.model = create_actor_critic(observation_space, action_space)
+        self.model = create_actor_critic(observation_space, action_space, device=device)
         self.optimizer = torch.optim.Adam(
             self.model.parameters(), lr=self.learning_rate, eps=adam_eps
         )
@@ -54,7 +58,9 @@ class PPO:
         self.policy_loss_coef = policy_loss_coef
         self.entropy_coef = entropy_coef
         self.max_grad_norm = max_grad_norm
-
+        self.advantage_normalization = advantage_normalization
+        self.annealed_lr = annealed_lr
+        self.device = device
         # Store spaces for reference
         self.observation_space = observation_space
         self.action_space = action_space
@@ -74,11 +80,11 @@ class PPO:
         """Process steps from multiple environments."""
 
         # Convert numpy arrays to torch tensors if needed
-        states_tensor = torch.tensor(states, dtype=torch.float32)
-        next_states_tensor = torch.tensor(next_states, dtype=torch.float32)
-        rewards_tensor = torch.tensor(rewards, dtype=torch.float32)
-        terminated_tensor = torch.tensor(terminated, dtype=torch.bool)
-        truncated_tensor = torch.tensor(truncated, dtype=torch.bool)
+        states_tensor = torch.tensor(states, dtype=torch.float32, device=self.device)
+        next_states_tensor = torch.tensor(next_states, dtype=torch.float32, device=self.device)
+        rewards_tensor = torch.tensor(rewards, dtype=torch.float32, device=self.device)
+        terminated_tensor = torch.tensor(terminated, dtype=torch.bool, device=self.device)
+        truncated_tensor = torch.tensor(truncated, dtype=torch.bool, device=self.device)
 
         # Get next state values for non-terminated episodes
         if last_step:
@@ -105,7 +111,7 @@ class PPO:
         self, state: np.ndarray
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """Sample action and return action, log probability, and value prediction."""
-        state_tensor = torch.tensor(state, dtype=torch.float32)
+        state_tensor = torch.tensor(state, dtype=torch.float32, device=self.device)
         with torch.no_grad():
             action, action_log_prob, _, state_value_prediction = self.model(
                 state_tensor
@@ -113,12 +119,18 @@ class PPO:
         return action, action_log_prob, state_value_prediction
 
     def update(self, global_step: int) -> None:
+        """
+        Update the PPO policy.
+        """
 
         clipfracs = []
 
         self.ppo_buffer.compute_returns()
 
         for epoch in range(self.epoches):
+            if self.annealed_lr:
+                for param_group in self.optimizer.param_groups:
+                    param_group["lr"] = self.learning_rate * (1 - epoch / self.epoches)
             for batch in self.ppo_buffer:
 
                 # Save old policy log probs for KL calculation
@@ -136,6 +148,11 @@ class PPO:
 
                 # Policy ratio for PPO update
                 ratio = torch.exp(new_policy_log_prob - old_policy_log_prob)
+
+                if self.advantage_normalization:
+                    batch["advantages"] = (
+                        batch["advantages"] - batch["advantages"].mean()
+                    ) / (batch["advantages"].std() + 1e-8)
 
                 # Clipped policy loss
                 clipped_ratio = torch.clamp(ratio, 1 - self.eps, 1 + self.eps)
