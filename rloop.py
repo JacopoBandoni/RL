@@ -89,7 +89,7 @@ def make_env(gym_id, seed, idx, capture_video, run_name, capture_episodes=0):
             else:
                 # Record all episodes (default behavior)
                 env = gym.wrappers.RecordVideo(env, f"videos/{run_name}")
-        
+
         env = gym.wrappers.RecordEpisodeStatistics(env)
         if isinstance(env.action_space, gym.spaces.Box):
             env = gym.wrappers.ClipAction(env)
@@ -119,7 +119,7 @@ def setup_logging(args, seed, current_run_name):
     # Initialize W&B if enabled
     if args.use_wandb:
         wandb.init(
-            project=args.wandb_project+"_"+args.gym_id,
+            project=args.wandb_project + "_" + args.gym_id,
             entity=args.wandb_entity,
             sync_tensorboard=True,
             config=hyperparams,
@@ -147,7 +147,7 @@ def train_single_seed(args, seed):
     print(f"Running with seed {seed}")
 
     # Setup unique run name and logging
-    current_run_name = f"my_new_{args.gym_id}_{seed}_{int(time.time())}"
+    current_run_name = f"{args.gym_id}_{seed}_{int(time.time())}"
     writer = setup_logging(args, seed, current_run_name)
 
     # Track total episodes across all environments
