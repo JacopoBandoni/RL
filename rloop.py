@@ -19,11 +19,11 @@ def parse_args():
 
     # fmt: off
     # Environment parameters
-    parser.add_argument("--gym-id", type=str, default="Walker2d-v5", help="Gym environment ID")
+    parser.add_argument("--gym-id", type=str, default="Humanoid-v5", help="Gym environment ID")
     parser.add_argument("--num-envs", type=int, default=1, help="Number of parallel environments")
-    parser.add_argument("--num-updates", type=int, default=488, help="Number of update iterations") # 1953 per 1M
+    parser.add_argument("--num-updates", type=int, default=488*4, help="Number of update iterations") # 1953 per 1M
     parser.add_argument("--num-steps", type=int, default=2048, help="Number of steps per update")
-    parser.add_argument("--seeds", nargs="+", type=int, default=[1,2,3,5], help="Random seeds to use")
+    parser.add_argument("--seeds", nargs="+", type=int, default=[1], help="Random seeds to use")
     # capture video sync with wandb is bugged with current version of wandb
     parser.add_argument("--capture-video", action="store_true", default=True, help="Capture videos of agent performance")
     parser.add_argument("--capture-episodes", type=int, default=100, help="Episode recording frequency (0 = all episodes, N = record one episode every N episodes)")
@@ -41,10 +41,10 @@ def parse_args():
     parser.add_argument("--max-grad-norm", type=float, default=0.5, help="Max norm for gradient clipping")
     parser.add_argument("--adam-eps", type=float, default=1e-5, help="Epsilon value for Adam optimizer")
     parser.add_argument("--advantage-normalization", action="store_true", default=True, help="Normalize advantage")
-    parser.add_argument("--annealed-lr", action="store_true", default=False, help="Use annealed learning rate")
+    parser.add_argument("--annealed-lr", action="store_true", default=True, help="Use annealed learning rate")
+    parser.add_argument("--target-kl", type=float, default=None, help="KL divergence target") # 0.015 in Openai implementation
     # GPU support
-    parser.add_argument("--device", type=str, default="cuda" if torch.cuda.is_available() else "cpu", 
-                        help="Device to use for training (cuda or cpu)")
+    parser.add_argument("--device", type=str, default="cpu", help="Device to use for training (cuda or cpu)")
     # Logging parameters
     parser.add_argument("--use-wandb", action="store_true", default=True, help="Use Weights & Biases for logging")
     parser.add_argument("--wandb-project", type=str, default=f"PPO", help="W&B project name")
@@ -89,7 +89,6 @@ def make_env(gym_id, seed, idx, capture_video, run_name, capture_episodes=0):
             else:
                 # Record all episodes (default behavior)
                 env = gym.wrappers.RecordVideo(env, f"videos/{run_name}")
-
         env = gym.wrappers.RecordEpisodeStatistics(env)
         if isinstance(env.action_space, gym.spaces.Box):
             env = gym.wrappers.ClipAction(env)
@@ -188,6 +187,7 @@ def train_single_seed(args, seed):
         adam_eps=args.adam_eps,
         advantage_normalization=args.advantage_normalization,
         annealed_lr=args.annealed_lr,
+        target_kl=args.target_kl,
         device=args.device,
     )
 

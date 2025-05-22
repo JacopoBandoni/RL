@@ -32,6 +32,7 @@ class PPO:
         adam_eps: float,
         advantage_normalization: bool,
         annealed_lr: bool,
+        target_kl: float,
         device: str,
     ) -> None:
         self.learning_rate = learning_rate
@@ -60,6 +61,7 @@ class PPO:
         self.max_grad_norm = max_grad_norm
         self.advantage_normalization = advantage_normalization
         self.annealed_lr = annealed_lr
+        self.target_kl = target_kl
         self.device = device
         # Store spaces for reference
         self.observation_space = observation_space
@@ -81,9 +83,13 @@ class PPO:
 
         # Convert numpy arrays to torch tensors if needed
         states_tensor = torch.tensor(states, dtype=torch.float32, device=self.device)
-        next_states_tensor = torch.tensor(next_states, dtype=torch.float32, device=self.device)
+        next_states_tensor = torch.tensor(
+            next_states, dtype=torch.float32, device=self.device
+        )
         rewards_tensor = torch.tensor(rewards, dtype=torch.float32, device=self.device)
-        terminated_tensor = torch.tensor(terminated, dtype=torch.bool, device=self.device)
+        terminated_tensor = torch.tensor(
+            terminated, dtype=torch.bool, device=self.device
+        )
         truncated_tensor = torch.tensor(truncated, dtype=torch.bool, device=self.device)
 
         # Get next state values for non-terminated episodes
@@ -185,6 +191,9 @@ class PPO:
                 total_loss.backward()
                 nn.utils.clip_grad_norm_(self.model.parameters(), self.max_grad_norm)
                 self.optimizer.step()
+            if self.target_kl:
+                if approx_kl > self.target_kl:
+                    break
 
         with torch.no_grad():
             all_value_preds, all_returns = self.ppo_buffer.get_all_data()
