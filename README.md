@@ -50,5 +50,5 @@ Logs: TensorBoard under `runs/…` (`tensorboard --logdir runs`). Optional W&B v
 ### Run REINFORCE
 
 ```bash
-RL % python rloop_reinforce.py --gym-id MountainCarContinuous-v0 --num-episodes 1000
+python rloop_reinforce.py --gym-id MountainCarContinuous-v0 --num-episodes 1000
 ```
