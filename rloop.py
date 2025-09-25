@@ -1,15 +1,14 @@
 import gymnasium as gym
 import numpy as np
-from rlalgo import PPO
+from rlalgo.ppo.trainer import PPO
 import random
 
 import argparse
 import time
 import wandb
 import torch
-from torch.utils.tensorboard import SummaryWriter
-import os
-
+from utils.envs import make_env
+from utils.logging import setup_logging
 
 def parse_args():
     """Parse command line arguments."""
@@ -53,92 +52,6 @@ def parse_args():
 
     args = parser.parse_args()
     return args
-
-
-def make_env(gym_id, seed, idx, capture_video, run_name, capture_episodes=0):
-    """Create a single environment factory function.
-
-    Args:
-        gym_id: The Gymnasium environment ID
-        seed: Random seed for the environment
-        idx: Index of the environment in the vectorized env
-        capture_video: Whether to capture video
-        run_name: Name of the current run (for video directory)
-        capture_episodes: Episode recording frequency (0 = all, N = record one episode every N episodes)
-    """
-
-    def thunk():
-        env = gym.make(gym_id, render_mode="rgb_array" if capture_video else None)
-        # Only capture video for the first environment (idx == 0)
-        if capture_video and idx == 0:
-            # If capture_episodes is specified, set up episode trigger
-            if capture_episodes > 0:
-                # Create a function to determine which episodes to record based on frequency
-                def episode_trigger(episode_id):
-                    # Record based on frequency
-                    if capture_episodes == 0:
-                        # Record all episodes
-                        return True
-                    else:
-                        # Record one episode every capture_episodes
-                        return episode_id % capture_episodes == 0
-
-                env = gym.wrappers.RecordVideo(
-                    env, f"videos/{run_name}", episode_trigger=episode_trigger
-                )
-            else:
-                # Record all episodes (default behavior)
-                env = gym.wrappers.RecordVideo(env, f"videos/{run_name}")
-        env = gym.wrappers.RecordEpisodeStatistics(env)
-        if isinstance(env.action_space, gym.spaces.Box):
-            env = gym.wrappers.ClipAction(env)
-            env = gym.wrappers.NormalizeObservation(env)
-            # Clipping observation
-            # env = gym.wrappers.TransformObservation(
-            #     env, lambda obs: np.clip(obs, -10, 10)
-            # )
-            env = gym.wrappers.NormalizeReward(env)
-            # Clipping reward
-            # env = gym.wrappers.TransformReward(
-            #     env, lambda reward: np.clip(reward, -10, 10)
-            # )
-        env.action_space.seed(seed)
-        env.observation_space.seed(seed)
-        return env
-
-    return thunk
-
-
-def setup_logging(args, seed, current_run_name):
-    """Set up W&B and TensorBoard logging."""
-    # Create hyperparameters dict
-    hyperparams = vars(args)
-    hyperparams["seed"] = seed
-
-    # Initialize W&B if enabled
-    if args.use_wandb:
-        wandb.init(
-            project=args.wandb_project + "_" + args.gym_id,
-            entity=args.wandb_entity,
-            sync_tensorboard=True,
-            config=hyperparams,
-            name=current_run_name,
-            monitor_gym=False,  # CHECK IF SOLVED
-            save_code=True,
-        )
-
-    # Create TensorBoard writer
-    log_dir = os.path.join("runs", current_run_name)
-    os.makedirs(log_dir, exist_ok=True)
-    writer = SummaryWriter(log_dir)
-
-    # Format hyperparameters for TensorBoard
-    hyperparams_table = "|param|value|\n|-|-|\n"
-    for key, value in hyperparams.items():
-        hyperparams_table += f"|{key}|{value}|\n"
-    writer.add_text("hyperparameters", hyperparams_table)
-
-    return writer
 
 
 def train_single_seed(args, seed):
