@@ -29,3 +29,9 @@ python rloop.py --gym-id CartPole-v1 --num-envs 1 --num-updates 50 --num-steps 1
 python rloop.py --gym-id Humanoid-v5 --num-envs 1 --num-updates 100 --num-steps 2048
 ```
 Logs: TensorBoard under `runs/…` (`tensorboard --logdir runs`). Optional W&B via `--use-wandb True`.
+
+### Run REINFORCE
+
+```bash
+RL % python rloop_reinforce.py --gym-id MountainCarContinuous-v0 --num-episodes 1000
+```
