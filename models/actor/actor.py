@@ -26,6 +26,7 @@ class Actor(nn.Module):
         obs_space_type: ObservationSpaceType = ObservationSpaceType.BOX,
         embedding_dim: int = 64,
         device: str = "cpu",
+        eps: float = 1e-6,
     ) -> None:
         super().__init__()
         self.action_space_type = action_space_type
@@ -79,7 +80,7 @@ class Actor(nn.Module):
         else:
             features = self.actor(x)
             mean = self.actor_mean(features)
-            std = torch.exp(self.actor_logstd)
+            std = torch.exp(self.actor_logstd) + self.eps
             return Normal(mean, std)
 
     @torch.no_grad()

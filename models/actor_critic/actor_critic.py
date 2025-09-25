@@ -33,12 +33,14 @@ class ActorCritic(nn.Module):
         action_space_type=ActionSpaceType.DISCRETE,
         obs_space_type=ObservationSpaceType.BOX,
         embedding_dim=64,  # For discrete observations
-        device="cpu"
+        device="cpu",
+        eps: float = 1e-6,
     ):
         super(ActorCritic, self).__init__()
         self.action_space_type = action_space_type
         self.obs_space_type = obs_space_type
         self.device = device
+        self.eps = eps
 
         # Input processing based on observation space type
         if obs_space_type == ObservationSpaceType.DISCRETE:
@@ -127,7 +129,7 @@ class ActorCritic(nn.Module):
         else:  # CONTINUOUS
             features = self.actor(x)
             action_mean = self.actor_mean(features)
-            action_std = torch.exp(self.actor_logstd)
+            action_std = torch.exp(self.actor_logstd) + self.eps
             probs = Normal(action_mean, action_std)
 
             if action is None:
