@@ -5,13 +5,30 @@ Minimal, extensible RL playground. Ships with REINFORCE and PPO algos and a mode
 ### Structure
 ```
 models/
-  actor_critic.py  # Generic actor-critic for discrete/continuous spaces
-  factory.py       # Space-aware model factory
+  actor/
+    actor.py          # Policy networks for REINFORCE (discrete/continuous)
+    factory.py        # Space-aware actor builder
+  actor_critic/
+    actor_critic.py   # Shared body + actor/critic heads
+    factory.py        # Space-aware actor-critic builder
+
 rlalgo/
   ppo/
-    buffer.py      # Multi-env rollout buffer with GAE
-    trainer.py     # PPO update logic
-rloop.py           # CLI entrypoint (envs, logging, training loop)
+    buffer.py         # Multi-env rollout buffer with GAE(lambda)
+    trainer.py        # PPO update logic and optimization
+  reinforce/
+    trainer.py        # Monte-Carlo policy gradient (REINFORCE)
+
+utils/
+  envs.py             # Env helpers: seeding, wrappers, vectorization, video
+  logging.py          # TensorBoard/W&B setup and utilities
+
+rloop.py              # PPO CLI (args, envs, training loop)
+rloop_reinforce.py    # REINFORCE CLI
+
+runs/                 # TensorBoard logs
+videos/               # Saved episode videos
+wandb/                # Weights & Biases run artifacts
 ```
 
 ### Install
