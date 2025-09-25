@@ -6,7 +6,7 @@ from typing import Dict, List, Iterator, Tuple, Any
 from torch.utils.tensorboard import SummaryWriter
 import torch.nn as nn
 
-from models.factory import create_actor_critic
+from models.actor_critic.factory import create_actor_critic
 from rlalgo.ppo.buffer import MultiEnvPPOBuffer
 
 

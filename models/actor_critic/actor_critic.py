@@ -23,7 +23,7 @@ def layer_init(layer, std=np.sqrt(2), bias_const=0.0):
     return layer
 
 
-class Agent(nn.Module):
+class ActorCritic(nn.Module):
     """Actor-Critic network that can handle both discrete and continuous action and observation spaces."""
 
     def __init__(
@@ -35,7 +35,7 @@ class Agent(nn.Module):
         embedding_dim=64,  # For discrete observations
         device="cpu"
     ):
-        super(Agent, self).__init__()
+        super(ActorCritic, self).__init__()
         self.action_space_type = action_space_type
         self.obs_space_type = obs_space_type
         self.device = device
