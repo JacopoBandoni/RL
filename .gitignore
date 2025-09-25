@@ -1,6 +1,7 @@
-env/
 runs/
 wandb/
 videos/
 saved_video/
 __pycache__
+.venv
+.DS_Store
