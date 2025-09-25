@@ -84,7 +84,6 @@ class Actor(nn.Module):
             std = torch.exp(self.actor_logstd) + self.eps
             return Normal(mean, std)
 
-    @torch.no_grad()
     def act(self, x: torch.Tensor):
         """Sample an action and return (action, log_prob, entropy)."""
         dist = self._distribution(x)

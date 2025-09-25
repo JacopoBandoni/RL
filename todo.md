@@ -49,6 +49,6 @@
 - [x] Understand and implement the details of the cleanrl implementation of PPO (for continous tasks)
       https://docs.cleanrl.dev/rl-algorithms/ppo/#explanation-of-the-logged-metrics_2 
 
-- [ ] add support for GPU experiments
+- [ ] you could maybe change PPO and REINFORCE parameters to be comparable on the number of total steps.
 
 MOVE to DREAMER v3
