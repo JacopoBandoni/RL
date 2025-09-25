@@ -32,6 +32,7 @@ class Actor(nn.Module):
         self.action_space_type = action_space_type
         self.obs_space_type = obs_space_type
         self.device = device
+        self.eps = eps
 
         # Observation processing
         if obs_space_type == ObservationSpaceType.DISCRETE:
