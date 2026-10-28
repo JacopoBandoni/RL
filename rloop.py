@@ -24,7 +24,7 @@ def parse_args():
     parser.add_argument("--num-steps", type=int, default=2048, help="Number of steps per update")
     parser.add_argument("--seeds", nargs="+", type=int, default=[1], help="Random seeds to use")
     # capture video sync with wandb is bugged with current version of wandb
-    parser.add_argument("--capture-video", action="store_true", default=True, help="Capture videos of agent performance")
+    parser.add_argument("--capture-video", action=argparse.BooleanOptionalAction, default=True, help="Capture videos of agent performance")
     parser.add_argument("--capture-episodes", type=int, default=100, help="Episode recording frequency (0 = all episodes, N = record one episode every N episodes)")
     # PPO hyperparameters
     parser.add_argument("--learning-rate", type=float, default=3e-4, help="Learning rate")
@@ -33,19 +33,19 @@ def parse_args():
     parser.add_argument("--eps", type=float, default=0.2, help="PPO clipping parameter")
     parser.add_argument("--epochs", type=int, default=10, help="Number of epochs for policy update")
     parser.add_argument("--batch-size", type=int, default=64, help="Batch size for policy update")
-    parser.add_argument("--value-clipping", action="store_true", default=False, help="Use value function clipping")
+    parser.add_argument("--value-clipping", action=argparse.BooleanOptionalAction, default=False, help="Use value function clipping")
     parser.add_argument("--value-loss-coef", type=float, default=0.5, help="Coefficient for value loss")
     parser.add_argument("--policy-loss-coef", type=float, default=1.0, help="Coefficient for policy loss")
     parser.add_argument("--entropy-coef", type=float, default=0, help="Coefficient for entropy loss")
     parser.add_argument("--max-grad-norm", type=float, default=0.5, help="Max norm for gradient clipping")
     parser.add_argument("--adam-eps", type=float, default=1e-5, help="Epsilon value for Adam optimizer")
-    parser.add_argument("--advantage-normalization", action="store_true", default=True, help="Normalize advantage")
-    parser.add_argument("--annealed-lr", action="store_true", default=True, help="Use annealed learning rate")
+    parser.add_argument("--advantage-normalization", action=argparse.BooleanOptionalAction, default=True, help="Normalize advantage")
+    parser.add_argument("--annealed-lr", action=argparse.BooleanOptionalAction, default=True, help="Use annealed learning rate")
     parser.add_argument("--target-kl", type=float, default=None, help="KL divergence target") # 0.015 in Openai implementation
     # GPU support
     parser.add_argument("--device", type=str, default="cpu", help="Device to use for training (cuda or cpu)")
     # Logging parameters
-    parser.add_argument("--use-wandb", action="store_true", default=True, help="Use Weights & Biases for logging")
+    parser.add_argument("--use-wandb", action=argparse.BooleanOptionalAction, default=True, help="Use Weights & Biases for logging")
     parser.add_argument("--wandb-project", type=str, default=f"PPO", help="W&B project name")
     parser.add_argument("--wandb-entity", type=str, default=None, help="W&B entity (team) name")
     # fmt: on

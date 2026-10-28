@@ -45,7 +45,7 @@ python rloop.py --gym-id CartPole-v1 --num-envs 1 --num-updates 50 --num-steps 1
 # Continuous example
 python rloop.py --gym-id Humanoid-v5 --num-envs 1 --num-updates 100 --num-steps 2048
 ```
-Logs: TensorBoard under `runs/…` (`tensorboard --logdir runs`). Optional W&B via `--use-wandb True`.
+Logs: TensorBoard under `runs/…` (`tensorboard --logdir runs`). W&B logging is on by default, disable it with `--no-use-wandb`.
 
 ### Run REINFORCE
 

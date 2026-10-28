@@ -22,7 +22,7 @@ def parse_args():
     parser.add_argument("--num-episodes", type=int, default=100, help="Number of episodes to train")
     parser.add_argument("--seeds", nargs="+", type=int, default=[1], help="Random seeds to use")
     # capture video sync with wandb is bugged with current version of wandb
-    parser.add_argument("--capture-video", action="store_true", default=True, help="Capture videos of agent performance")
+    parser.add_argument("--capture-video", action=argparse.BooleanOptionalAction, default=True, help="Capture videos of agent performance")
     parser.add_argument("--capture-episodes", type=int, default=100, help="Episode recording frequency (0 = all episodes, N = record one episode every N episodes)")
     # GPU support
     parser.add_argument("--device", type=str, default="cpu", help="Device to use for training (cuda or cpu)")
@@ -32,7 +32,7 @@ def parse_args():
     parser.add_argument("--adam-eps", type=float, default=1e-5, help="Adam epsilon")
 
     # Logging parameters
-    parser.add_argument("--use-wandb", action="store_true", default=True, help="Use Weights & Biases for logging")
+    parser.add_argument("--use-wandb", action=argparse.BooleanOptionalAction, default=True, help="Use Weights & Biases for logging")
     parser.add_argument("--wandb-project", type=str, default=f"REINFORCE", help="W&B project name")
     parser.add_argument("--wandb-entity", type=str, default=None, help="W&B entity (team) name")
     # fmt: on
