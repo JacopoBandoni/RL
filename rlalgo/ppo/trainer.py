@@ -32,6 +32,7 @@ class PPO:
         adam_eps: float,
         advantage_normalization: bool,
         annealed_lr: bool,
+        num_updates: int,
         target_kl: float,
         device: str,
     ) -> None:
@@ -61,6 +62,8 @@ class PPO:
         self.max_grad_norm = max_grad_norm
         self.advantage_normalization = advantage_normalization
         self.annealed_lr = annealed_lr
+        self.num_updates = num_updates
+        self.update_count = 0
         self.target_kl = target_kl
         self.device = device
         # Store spaces for reference
@@ -131,12 +134,16 @@ class PPO:
 
         clipfracs = []
 
+        # anneal lr linearly over the whole training, not within an update
+        if self.annealed_lr:
+            frac = 1.0 - self.update_count / self.num_updates
+            for param_group in self.optimizer.param_groups:
+                param_group["lr"] = self.learning_rate * frac
+        self.update_count += 1
+
         self.ppo_buffer.compute_returns()
 
         for epoch in range(self.epoches):
-            if self.annealed_lr:
-                for param_group in self.optimizer.param_groups:
-                    param_group["lr"] = self.learning_rate * (1 - epoch / self.epoches)
             for batch in self.ppo_buffer:
 
                 # Save old policy log probs for KL calculation

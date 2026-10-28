@@ -100,6 +100,7 @@ def train_single_seed(args, seed):
         adam_eps=args.adam_eps,
         advantage_normalization=args.advantage_normalization,
         annealed_lr=args.annealed_lr,
+        num_updates=args.num_updates,
         target_kl=args.target_kl,
         device=args.device,
     )
