@@ -52,7 +52,12 @@ class PPObuffer:
         return len(self.data["states"])
 
     def compute_returns_and_advantages(self) -> None:
-        """Compute returns and advantages using GAE."""
+        """Compute returns and advantages using GAE.
+
+        Truncated steps and the last step of the rollout are treated as
+        trajectory ends, their reward already includes gamma * V(s')
+        (see PPO.process_step).
+        """
 
         steps_number = len(self.data["states"])
         new_episode_idx = 0
@@ -172,6 +177,7 @@ class MultiEnvPPOBuffer:
         rewards: torch.Tensor,
         terminated: torch.Tensor,
         truncated: torch.Tensor,
+        autoreset: np.ndarray,
     ) -> None:
         """
         Add steps from multiple environments.
@@ -179,6 +185,10 @@ class MultiEnvPPOBuffer:
         """
         # Distribute data to individual buffers
         for env_idx in range(self.num_env):
+            # the step after an episode end only resets the env, so it is not
+            # a real transition (action ignored, reward 0)
+            if autoreset[env_idx]:
+                continue
             self.ppo_buffers[env_idx].add_step(
                 state=states[env_idx],
                 action=actions[env_idx],

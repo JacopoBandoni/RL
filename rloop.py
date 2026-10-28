@@ -77,7 +77,8 @@ def train_single_seed(args, seed):
                 args.capture_episodes,
             )
             for i in range(args.num_envs)
-        ]
+        ],
+        autoreset_mode=gym.vector.AutoresetMode.NEXT_STEP,
     )
 
     # Initialize PPO agent
@@ -110,6 +111,8 @@ def train_single_seed(args, seed):
 
     # Reset environments
     obs, info = envs.reset(seed=seed)
+    # envs whose previous step ended an episode, their next step is a reset
+    autoreset = np.zeros(args.num_envs, dtype=bool)
 
     # Main training loop
     for update in range(args.num_updates):
@@ -136,6 +139,7 @@ def train_single_seed(args, seed):
                 rewards=rewards,
                 terminated=terminated,
                 truncated=truncated,
+                autoreset=autoreset,
                 # last_step is necessary so it knows
                 # wheter to bootstrap in case the episode is not finished
                 last_step=step == (args.num_steps - 1),
@@ -143,6 +147,7 @@ def train_single_seed(args, seed):
 
             # Update observation
             obs = next_obs
+            autoreset = np.logical_or(terminated, truncated)
 
             if "episode" in info:
                 for i, done in enumerate(info["episode"]["_r"]):

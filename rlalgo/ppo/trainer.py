@@ -80,6 +80,7 @@ class PPO:
         rewards: np.ndarray,
         terminated: np.ndarray,
         truncated: np.ndarray,
+        autoreset: np.ndarray,
         last_step: bool = False,
     ) -> None:
         """Process steps from multiple environments."""
@@ -95,16 +96,15 @@ class PPO:
         )
         truncated_tensor = torch.tensor(truncated, dtype=torch.bool, device=self.device)
 
-        # Get next state values for non-terminated episodes
-        if last_step:
-            for i in range(self.num_envs):
-                # HERE one could choose to bootstrap even for truncated episodes
-                if terminated[i] == False and truncated[i] == False:
-                    # bootstrap final
-                    with torch.no_grad():
-                        rewards_tensor[i] = rewards_tensor[
-                            i
-                        ] + self.gamma * self.model.get_state(next_states_tensor[i])
+        # Bootstrap with the value of the next state when the episode is cut
+        # (time limit truncation or end of rollout) but not terminated.
+        # With NEXT_STEP autoreset next_states holds the real final observation.
+        for i in range(self.num_envs):
+            if not terminated[i] and not autoreset[i] and (truncated[i] or last_step):
+                with torch.no_grad():
+                    rewards_tensor[i] = rewards_tensor[
+                        i
+                    ] + self.gamma * self.model.get_state(next_states_tensor[i])
 
         self.ppo_buffer.add_steps(
             states=states_tensor,
@@ -114,6 +114,7 @@ class PPO:
             rewards=rewards_tensor,
             terminated=terminated_tensor,
             truncated=truncated_tensor,
+            autoreset=autoreset,
         )
 
     def sample_action(
