@@ -155,9 +155,16 @@ class PPO:
                 )
 
                 # Calculate losses
-                mse_value_function_loss = (
-                    0.5 * ((state_values.squeeze() - batch["returns"]) ** 2).mean()
-                )
+                state_values = state_values.squeeze()
+                value_loss = (state_values - batch["returns"]) ** 2
+                if self.value_clipping:
+                    # clip new values around the ones predicted during rollout
+                    clipped_values = batch["value_preds"] + torch.clamp(
+                        state_values - batch["value_preds"], -self.eps, self.eps
+                    )
+                    clipped_value_loss = (clipped_values - batch["returns"]) ** 2
+                    value_loss = torch.max(value_loss, clipped_value_loss)
+                mse_value_function_loss = 0.5 * value_loss.mean()
 
                 # Policy ratio for PPO update
                 ratio = torch.exp(new_policy_log_prob - old_policy_log_prob)
